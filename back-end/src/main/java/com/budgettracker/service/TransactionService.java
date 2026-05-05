@@ -27,8 +27,8 @@ public class TransactionService {
     private CategoryRepository categoryRepository;
 
     public List<TransactionResponse> getAll(String fromParam, String toParam) {
-        LocalDate from = fromParam != null ? LocalDate.parse(fromParam) : null;
-        LocalDate to = toParam != null ? LocalDate.parse(toParam) : null;
+        LocalDate from = fromParam != null ? parseDate(fromParam) : null;
+        LocalDate to = toParam != null ? parseDate(toParam) : null;
 
         if (from != null && to != null && from.isAfter(to)) {
             throw new BudgetException("'from' date must not be after 'to' date",
@@ -58,7 +58,7 @@ public class TransactionService {
         Transaction transaction = new Transaction();
         transaction.setAmount(amount);
         transaction.setDescription(request.description());
-        transaction.setDate(LocalDate.parse(request.date()));
+        transaction.setDate(parseDate(request.date()));
         transaction.setType(category.getType());
         transaction.setCategory(category);
         transactionRepository.save(transaction);
@@ -72,7 +72,7 @@ public class TransactionService {
 
         transaction.setAmount(amount);
         transaction.setDescription(request.description());
-        transaction.setDate(LocalDate.parse(request.date()));
+        transaction.setDate(parseDate(request.date()));
         transaction.setCategory(category);
         transaction.setType(category.getType());
         transactionRepository.save(transaction);
@@ -93,6 +93,15 @@ public class TransactionService {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new BudgetException("Category not found with id " + categoryId,
                         ErrorCode.CATEGORY_NOT_FOUND, 400));
+    }
+
+    private LocalDate parseDate(String dateStr) {
+        try {
+            return LocalDate.parse(dateStr);
+        } catch (DateTimeParseException e) {
+            throw new BudgetException("Invalid date format: " + dateStr + ". Expected YYYY-MM-DD",
+                    ErrorCode.INVALID_DATE_RANGE, 400);
+        }
     }
 
     private BigDecimal parseAmount(String amountStr) {
