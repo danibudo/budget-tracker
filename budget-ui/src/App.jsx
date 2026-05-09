@@ -1,21 +1,18 @@
+import { useState, useCallback } from "react";
 import { Tabs } from "@mantine/core";
 import './App.css'
 
 function App() {
+  const [refreshKey, setRefreshKey] = useState(0);
+  const triggerRefresh = useCallback(() => setRefreshKey(k => k + 1), []);
 
   return (
     <>
-      <Tabs>
-        <Tabs.List default="dashboard">
-          <Tabs.Tab value="dashboard">
-            Dashboard
-          </Tabs.Tab>
-          <Tabs.Tab value="transactions">
-            Transactions
-          </Tabs.Tab>
-          <Tabs.Tab value="categories">
-            Categories
-          </Tabs.Tab>
+      <Tabs defaultValue="dashboard">
+        <Tabs.List>
+          <Tabs.Tab value="dashboard">Dashboard</Tabs.Tab>
+          <Tabs.Tab value="transactions">Transactions</Tabs.Tab>
+          <Tabs.Tab value="categories">Categories</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="dashboard">
