@@ -8,6 +8,7 @@ export default function CategoryList({ refreshKey, triggerRefresh }) {
   const [error, setError] = useState(null);
   const [toDelete, setToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -20,15 +21,21 @@ export default function CategoryList({ refreshKey, triggerRefresh }) {
 
   async function handleDelete() {
     setDeleting(true);
+    setDeleteError(null);
     try {
       await client.delete(`/categories/${toDelete.id}`);
       setToDelete(null);
       triggerRefresh();
     } catch (err) {
-      setError(err.message);
+      setDeleteError(err.message);
     } finally {
       setDeleting(false);
     }
+  }
+
+  function closeModal() {
+    setToDelete(null);
+    setDeleteError(null);
   }
 
   if (loading) return <Loader />;
@@ -56,7 +63,7 @@ export default function CategoryList({ refreshKey, triggerRefresh }) {
 
       <Modal
         opened={toDelete !== null}
-        onClose={() => setToDelete(null)}
+        onClose={closeModal}
         title="Delete category"
         centered
       >
@@ -64,8 +71,9 @@ export default function CategoryList({ refreshKey, triggerRefresh }) {
           Are you sure you want to delete <strong>{toDelete?.name}</strong>?{' '}
           All transactions in this category will also be deleted.
         </Text>
+        {deleteError && <Text c="red" size="sm" mb="sm">{deleteError}</Text>}
         <Group justify="flex-end">
-          <Button variant="default" onClick={() => setToDelete(null)} disabled={deleting}>Cancel</Button>
+          <Button variant="default" onClick={closeModal} disabled={deleting}>Cancel</Button>
           <Button color="red" onClick={handleDelete} loading={deleting}>Delete</Button>
         </Group>
       </Modal>
