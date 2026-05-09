@@ -1,23 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Stack, Group, Text, Badge, ActionIcon, Loader, Modal, Button, Box } from "@mantine/core";
 import { client } from "../../api/client";
+import { useFetch } from "../../hooks/useFetch";
 
 export default function CategoryList({ refreshKey, triggerRefresh }) {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { data, loading, error } = useFetch('/categories', [refreshKey]);
+  const categories = data ?? [];
   const [toDelete, setToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
-
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-    client.get('/categories')
-      .then(setCategories)
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [refreshKey]);
 
   async function handleDelete() {
     setDeleting(true);
