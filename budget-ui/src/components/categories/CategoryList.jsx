@@ -1,0 +1,74 @@
+import { useEffect, useState } from "react";
+import { Stack, Group, Text, Badge, ActionIcon, Loader, Modal, Button, Box } from "@mantine/core";
+import { client } from "../../api/client";
+
+export default function CategoryList({ refreshKey, triggerRefresh }) {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [toDelete, setToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    client.get('/categories')
+      .then(setCategories)
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [refreshKey]);
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await client.delete(`/categories/${toDelete.id}`);
+      setToDelete(null);
+      triggerRefresh();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  if (loading) return <Loader />;
+  if (error) return <Text c="red">{error}</Text>;
+  if (categories.length === 0) return <Text c="dimmed">No categories yet.</Text>;
+
+  return (
+    <>
+      <Stack gap="xs">
+        {categories.map(cat => (
+          <Group key={cat.id} justify="space-between" p="sm" style={{ border: '1px solid var(--mantine-color-default-border)', borderRadius: 8 }}>
+            <Group gap="sm">
+              <Box style={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: cat.color, flexShrink: 0 }} />
+              <Text fw={500}>{cat.name}</Text>
+              <Badge color={cat.type === 'INCOME' ? 'green' : 'red'} variant="light">
+                {cat.type}
+              </Badge>
+            </Group>
+            <ActionIcon variant="subtle" color="red" onClick={() => setToDelete(cat)} aria-label="Delete category">
+              ✕
+            </ActionIcon>
+          </Group>
+        ))}
+      </Stack>
+
+      <Modal
+        opened={toDelete !== null}
+        onClose={() => setToDelete(null)}
+        title="Delete category"
+        centered
+      >
+        <Text mb="md">
+          Are you sure you want to delete <strong>{toDelete?.name}</strong>?{' '}
+          All transactions in this category will also be deleted.
+        </Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setToDelete(null)} disabled={deleting}>Cancel</Button>
+          <Button color="red" onClick={handleDelete} loading={deleting}>Delete</Button>
+        </Group>
+      </Modal>
+    </>
+  );
+}

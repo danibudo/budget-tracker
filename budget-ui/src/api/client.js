@@ -6,10 +6,11 @@ async function request(path, options = {}) {
         ...options,
     });
 
-    const data = await response.json();
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : null;
 
     if (!response.ok) {
-        throw new Error(data.message || 'An unexpected error occurred');
+        throw new Error(data?.message || 'An unexpected error occurred');
     }
 
     return data;
