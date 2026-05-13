@@ -6,6 +6,7 @@ import CategoryList from "./components/categories/CategoryList";
 import AddTransactionForm from "./components/transactions/AddTransactionForm";
 import TransactionList from "./components/transactions/TransactionList";
 import SummaryCards from "./components/dashboard/SummaryCards";
+import ExpensePieChart from "./components/dashboard/ExpensePieChart";
 
 function App() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -23,6 +24,7 @@ function App() {
         <Tabs.Panel value="dashboard" p="md">
           <Stack gap="xl">
             <SummaryCards refreshKey={refreshKey} />
+            <ExpensePieChart refreshKey={refreshKey} />
           </Stack>
         </Tabs.Panel>
         <Tabs.Panel value="transactions" p="md">
