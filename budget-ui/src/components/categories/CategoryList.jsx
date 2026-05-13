@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Stack, Group, Text, Badge, ActionIcon, Loader, Modal, Button, Box } from "@mantine/core";
+import { Stack, Group, Text, ActionIcon, Loader, Box } from "@mantine/core";
 import { client } from "../../api/client";
 import { useFetch } from "../../hooks/useFetch";
+import ConfirmModal from "../shared/ConfirmModal";
+import TypeBadge from "../shared/TypeBadge";
 
 export default function CategoryList({ refreshKey, triggerRefresh }) {
   const { data, loading, error } = useFetch('/categories', [refreshKey]);
@@ -41,9 +43,7 @@ export default function CategoryList({ refreshKey, triggerRefresh }) {
             <Group gap="sm">
               <Box style={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: cat.color, flexShrink: 0 }} />
               <Text fw={500}>{cat.name}</Text>
-              <Badge color={cat.type === 'INCOME' ? 'green' : 'red'} variant="light">
-                {cat.type}
-              </Badge>
+              <TypeBadge type={cat.type} />
             </Group>
             <ActionIcon variant="subtle" color="red" onClick={() => setToDelete(cat)} aria-label="Delete category">
               ✕
@@ -52,22 +52,19 @@ export default function CategoryList({ refreshKey, triggerRefresh }) {
         ))}
       </Stack>
 
-      <Modal
+      <ConfirmModal
         opened={toDelete !== null}
         onClose={closeModal}
+        onConfirm={handleDelete}
         title="Delete category"
-        centered
+        loading={deleting}
+        error={deleteError}
       >
         <Text mb="md">
           Are you sure you want to delete <strong>{toDelete?.name}</strong>?{' '}
           All transactions in this category will also be deleted.
         </Text>
-        {deleteError && <Text c="red" size="sm" mb="sm">{deleteError}</Text>}
-        <Group justify="flex-end">
-          <Button variant="default" onClick={closeModal} disabled={deleting}>Cancel</Button>
-          <Button color="red" onClick={handleDelete} loading={deleting}>Delete</Button>
-        </Group>
-      </Modal>
+      </ConfirmModal>
     </>
   );
 }
