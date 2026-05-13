@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.util.logging.Logger;
 
 @Path("/transactions")
 @RequestScoped
@@ -14,22 +15,27 @@ import jakarta.ws.rs.core.Response;
 @Consumes(MediaType.APPLICATION_JSON)
 public class TransactionResource {
 
+    private static final Logger log = Logger.getLogger(TransactionResource.class.getName());
+
     @Inject
     private TransactionService transactionService;
 
     @GET
     public Response getAll(@QueryParam("from") String from, @QueryParam("to") String to) {
+        log.info("GET /transactions from=" + from + " to=" + to);
         return Response.ok(transactionService.getAll(from, to)).build();
     }
 
     @GET
     @Path("/{id}")
     public Response getById(@PathParam("id") Long id) {
+        log.info("GET /transactions/" + id);
         return Response.ok(transactionService.getById(id)).build();
     }
 
     @POST
     public Response create(TransactionRequest request) {
+        log.info("POST /transactions categoryId=" + request.categoryId() + " amount=" + request.amount());
         return Response.status(Response.Status.CREATED)
                 .entity(transactionService.create(request))
                 .build();
@@ -38,12 +44,14 @@ public class TransactionResource {
     @PUT
     @Path("/{id}")
     public Response update(@PathParam("id") Long id, TransactionRequest request) {
+        log.info("PUT /transactions/" + id + " categoryId=" + request.categoryId() + " amount=" + request.amount());
         return Response.ok(transactionService.update(id, request)).build();
     }
 
     @DELETE
     @Path("/{id}")
     public Response delete(@PathParam("id") Long id) {
+        log.info("DELETE /transactions/" + id);
         transactionService.delete(id);
         return Response.noContent().build();
     }

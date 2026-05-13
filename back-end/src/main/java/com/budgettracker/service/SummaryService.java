@@ -10,15 +10,19 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.logging.Logger;
 
 @ApplicationScoped
 @Transactional
 public class SummaryService {
 
+    private static final Logger log = Logger.getLogger(SummaryService.class.getName());
+
     @Inject
     private TransactionRepository transactionRepository;
 
     public SummaryResponse getSummary() {
+        log.fine("Computing summary");
         BigDecimal totalIncome = transactionRepository.sumByType(CategoryType.INCOME);
         BigDecimal totalExpenses = transactionRepository.sumByType(CategoryType.EXPENSE);
         BigDecimal balance = totalIncome.subtract(totalExpenses);
@@ -30,6 +34,7 @@ public class SummaryService {
     }
 
     public List<ExpensesByCategoryItem> getExpensesByCategory() {
+        log.fine("Computing expenses by category");
         return transactionRepository.findExpensesByCategory().stream()
                 .map(row -> new ExpensesByCategoryItem(
                         (String) row[0],
@@ -39,6 +44,7 @@ public class SummaryService {
     }
 
     public List<MonthlyItem> getMonthly() {
+        log.fine("Computing monthly totals");
         return transactionRepository.findMonthlyTotals().stream()
                 .map(row -> new MonthlyItem(
                         (String) row[0],

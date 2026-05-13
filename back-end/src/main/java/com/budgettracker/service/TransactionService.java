@@ -15,10 +15,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.logging.Logger;
 
 @ApplicationScoped
 @Transactional
 public class TransactionService {
+
+    private static final Logger log = Logger.getLogger(TransactionService.class.getName());
 
     @Inject
     private TransactionRepository transactionRepository;
@@ -27,10 +30,12 @@ public class TransactionService {
     private CategoryRepository categoryRepository;
 
     public List<TransactionResponse> getAll(String fromParam, String toParam) {
+        log.fine("Fetching transactions from=" + fromParam + " to=" + toParam);
         LocalDate from = fromParam != null ? parseDate(fromParam) : null;
         LocalDate to = toParam != null ? parseDate(toParam) : null;
 
         if (from != null && to != null && from.isAfter(to)) {
+            log.warning("Invalid date range: from=" + from + " to=" + to);
             throw new BudgetException("'from' date must not be after 'to' date",
                     ErrorCode.INVALID_DATE_RANGE, 400);
         }
@@ -48,6 +53,7 @@ public class TransactionService {
     }
 
     public TransactionResponse getById(Long id) {
+        log.fine("Fetching transaction id=" + id);
         return toResponse(findOrThrow(id));
     }
 
@@ -62,6 +68,7 @@ public class TransactionService {
         transaction.setType(category.getType());
         transaction.setCategory(category);
         transactionRepository.save(transaction);
+        log.info("Created transaction id=" + transaction.getId() + " amount=" + amount + " categoryId=" + category.getId());
         return toResponse(transaction);
     }
 
@@ -76,29 +83,38 @@ public class TransactionService {
         transaction.setCategory(category);
         transaction.setType(category.getType());
         transactionRepository.save(transaction);
+        log.info("Updated transaction id=" + id);
         return toResponse(transaction);
     }
 
     public void delete(Long id) {
         transactionRepository.delete(findOrThrow(id));
+        log.info("Deleted transaction id=" + id);
     }
 
     private Transaction findOrThrow(Long id) {
         return transactionRepository.findById(id)
-                .orElseThrow(() -> new BudgetException("Transaction not found with id " + id,
-                        ErrorCode.TRANSACTION_NOT_FOUND, 404));
+                .orElseThrow(() -> {
+                    log.warning("Transaction not found: id=" + id);
+                    return new BudgetException("Transaction not found with id " + id,
+                            ErrorCode.TRANSACTION_NOT_FOUND, 404);
+                });
     }
 
     private Category findCategoryOrThrow(Long categoryId) {
         return categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new BudgetException("Category not found with id " + categoryId,
-                        ErrorCode.CATEGORY_NOT_FOUND, 400));
+                .orElseThrow(() -> {
+                    log.warning("Category not found for transaction: categoryId=" + categoryId);
+                    return new BudgetException("Category not found with id " + categoryId,
+                            ErrorCode.CATEGORY_NOT_FOUND, 400);
+                });
     }
 
     private LocalDate parseDate(String dateStr) {
         try {
             return LocalDate.parse(dateStr);
         } catch (DateTimeParseException e) {
+            log.warning("Invalid date format: " + dateStr);
             throw new BudgetException("Invalid date format: " + dateStr + ". Expected YYYY-MM-DD",
                     ErrorCode.INVALID_DATE_RANGE, 400);
         }
@@ -108,10 +124,12 @@ public class TransactionService {
         try {
             BigDecimal amount = new BigDecimal(amountStr);
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                log.warning("Non-positive amount: " + amountStr);
                 throw new BudgetException("Amount must be positive", ErrorCode.INVALID_AMOUNT, 400);
             }
             return amount;
         } catch (NumberFormatException e) {
+            log.warning("Invalid amount format: " + amountStr);
             throw new BudgetException("Invalid amount: " + amountStr, ErrorCode.INVALID_AMOUNT, 400);
         }
     }
