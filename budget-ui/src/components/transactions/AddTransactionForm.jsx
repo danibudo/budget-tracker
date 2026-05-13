@@ -12,7 +12,7 @@ export default function AddTransactionForm({ triggerRefresh }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const { data: categories } = useFetch('/categories');
+  const { data: categories, error: categoriesError } = useFetch('/categories');
 
   const categoryOptions = (categories ?? []).map(cat => ({
     value: String(cat.id),
@@ -80,6 +80,7 @@ export default function AddTransactionForm({ triggerRefresh }) {
           onChange={val => set('categoryId', val)}
           allowDeselect={false}
           required
+          error={categoriesError ? 'Could not load categories' : undefined}
         />
         {error && <Text c="red" size="sm">{error}</Text>}
         <Button type="submit" loading={loading} disabled={!canSubmit}>
