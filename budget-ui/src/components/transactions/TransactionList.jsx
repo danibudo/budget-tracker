@@ -43,9 +43,9 @@ export default function TransactionList({ refreshKey, triggerRefresh }) {
 
   return (
     <>
-      <Table striped={false} highlightOnHover>
+      <Table striped={false} highlightOnHover styles={{ th: { textAlign: 'center' } }}>
         <Table.Thead>
-          <Table.Tr>
+          <Table.Tr >
             <Table.Th>Date</Table.Th>
             <Table.Th>Description</Table.Th>
             <Table.Th>Category</Table.Th>

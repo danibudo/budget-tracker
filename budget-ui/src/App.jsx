@@ -3,6 +3,8 @@ import { Tabs, Stack } from "@mantine/core";
 import './App.css'
 import AddCategoryForm from "./components/categories/AddCategoryForm";
 import CategoryList from "./components/categories/CategoryList";
+import AddTransactionForm from "./components/transactions/AddTransactionForm";
+import TransactionList from "./components/transactions/TransactionList";
 
 function App() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -20,8 +22,11 @@ function App() {
         <Tabs.Panel value="dashboard">
           <>Dashboard</>
         </Tabs.Panel>
-        <Tabs.Panel value="transactions">
-          <>Transactions</>
+        <Tabs.Panel value="transactions" p="md">
+          <Stack gap="xl">
+            <AddTransactionForm triggerRefresh={triggerRefresh} />
+            <TransactionList refreshKey={refreshKey} triggerRefresh={triggerRefresh} />
+          </Stack>
         </Tabs.Panel>
         <Tabs.Panel value="categories" p="md">
           <Stack gap="xl">
