@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Tabs, Stack } from "@mantine/core";
+import {Tabs, Stack, GridCol, Grid} from "@mantine/core";
 import './App.css'
 import AddCategoryForm from "./components/categories/AddCategoryForm";
 import CategoryList from "./components/categories/CategoryList";
@@ -7,6 +7,7 @@ import AddTransactionForm from "./components/transactions/AddTransactionForm";
 import TransactionList from "./components/transactions/TransactionList";
 import SummaryCards from "./components/dashboard/SummaryCards";
 import ExpensePieChart from "./components/dashboard/ExpensePieChart";
+import MonthlyBarChart from "./components/dashboard/MonthlyBarChart";
 
 function App() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -24,7 +25,14 @@ function App() {
         <Tabs.Panel value="dashboard" p="md">
           <Stack gap="xl">
             <SummaryCards refreshKey={refreshKey} />
-            <ExpensePieChart refreshKey={refreshKey} />
+            <Grid aria-colcount={2}>
+              <GridCol span={6}>
+                <ExpensePieChart refreshKey={refreshKey} />
+              </GridCol>
+              <GridCol span={6}>
+                <MonthlyBarChart refreshKey={refreshKey} />
+              </GridCol>
+            </Grid>
           </Stack>
         </Tabs.Panel>
         <Tabs.Panel value="transactions" p="md">

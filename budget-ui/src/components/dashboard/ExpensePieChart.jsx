@@ -1,4 +1,4 @@
-import { Text, Loader } from "@mantine/core";
+import { Text, Loader, Stack, Title } from "@mantine/core";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useFetch } from "../../hooks/useFetch";
 import { formatEuro } from "../../utils/format";
@@ -35,8 +35,11 @@ export default function ExpensePieChart({ refreshKey }) {
   if (items.length === 0) return <Text c="dimmed">No expense data to display.</Text>;
 
   return (
-    <ResponsiveContainer width="100%" aspect={2}>
-      <PieChart title="Total expenses by category" >
+    <Stack gap="xs">
+      <Title order={5}>Expenses by category</Title>
+      <Text size="xs" c="dimmed">Total spent per expense category across all time</Text>
+      <ResponsiveContainer width="100%" aspect={1.6}>
+      <PieChart>
         <Pie
           data={items}
           dataKey="amount"
@@ -53,5 +56,6 @@ export default function ExpensePieChart({ refreshKey }) {
         <Legend />
       </PieChart>
     </ResponsiveContainer>
+    </Stack>
   );
 }
