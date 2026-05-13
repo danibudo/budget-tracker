@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Stack, TextInput, Select, Group, Box, Button, Text, Title } from "@mantine/core";
+import {Stack, TextInput, Group, Box, Button, Text, Title, SegmentedControl} from "@mantine/core";
 import { client } from "../../api/client";
 
 const SWATCHES = ['#e03131', '#2f9e44', '#1971c2', '#f08c00', '#7048e8', '#099268', '#e64980', '#1098ad'];
@@ -9,7 +9,7 @@ const TYPE_OPTIONS = [
   { value: 'INCOME', label: 'Income' },
 ];
 
-const EMPTY = { name: '', type: null, color: null };
+const EMPTY = { name: '', type: 'EXPENSE', color: null };
 
 export default function AddCategoryForm({ triggerRefresh }) {
   const [fields, setFields] = useState(EMPTY);
@@ -22,7 +22,7 @@ export default function AddCategoryForm({ triggerRefresh }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!fields.name.trim() || !fields.type || !fields.color) return;
+    if (!fields.name.trim() || !fields.color) return;
 
     setLoading(true);
     setError(null);
@@ -48,16 +48,12 @@ export default function AddCategoryForm({ triggerRefresh }) {
           onChange={e => set('name', e.currentTarget.value)}
           required
         />
-        <Select
-          label="Type"
-          placeholder="Select type"
-          data={TYPE_OPTIONS}
-          value={fields.type}
-          onChange={val => set('type', val)}
-          required
-        />
         <Box>
-          <Text size="sm" fw={500} mb={6}>Color</Text>
+          <Text size="sm" fw={600} mb={6}>Type <Text component="span" c="red">*</Text></Text>
+          <SegmentedControl data={TYPE_OPTIONS} value={fields.type} onChange={val => set('type', val)} fullWidth/>
+        </Box>
+        <Box>
+          <Text size="sm" fw={600} mb={6}>Color <Text component="span" c="red">*</Text></Text>
           <Group gap={8}>
             {SWATCHES.map(hex => (
               <Box
@@ -77,7 +73,7 @@ export default function AddCategoryForm({ triggerRefresh }) {
           </Group>
         </Box>
         {error && <Text c="red" size="sm">{error}</Text>}
-        <Button type="submit" loading={loading} disabled={!fields.name.trim() || !fields.type || !fields.color}>
+        <Button type="submit" loading={loading} disabled={!fields.name.trim() || !fields.color}>
           Add Category
         </Button>
       </Stack>
