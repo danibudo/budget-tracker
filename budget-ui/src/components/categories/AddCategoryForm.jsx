@@ -54,7 +54,7 @@ export default function AddCategoryForm({ triggerRefresh }) {
         </Box>
         <Box>
           <Text size="sm" fw={600} mb={6}>Color <Text component="span" c="red">*</Text></Text>
-          <Group gap={8}>
+          <Group gap={8} justify="center">
             {SWATCHES.map(hex => (
               <Box
                 key={hex}
