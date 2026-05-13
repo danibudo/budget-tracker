@@ -6,7 +6,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      "/api": "http://localhost:8080/budget-tracker/api"
+      "/api": {
+        target: "http://localhost:8080",
+        rewrite: (path) => path.replace(/^\/api/, "/budget-tracker-api/api")
+      }
     }
   }
 })

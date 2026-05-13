@@ -1,6 +1,8 @@
 import { useState, useCallback } from "react";
-import { Tabs } from "@mantine/core";
+import { Tabs, Stack } from "@mantine/core";
 import './App.css'
+import AddCategoryForm from "./components/categories/AddCategoryForm";
+import CategoryList from "./components/categories/CategoryList";
 
 function App() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -21,8 +23,11 @@ function App() {
         <Tabs.Panel value="transactions">
           <>Transactions</>
         </Tabs.Panel>
-        <Tabs.Panel value="categories">
-          <>Categories</>
+        <Tabs.Panel value="categories" p="md">
+          <Stack gap="xl">
+            <AddCategoryForm triggerRefresh={triggerRefresh} />
+            <CategoryList refreshKey={refreshKey} triggerRefresh={triggerRefresh} />
+          </Stack>
         </Tabs.Panel>
       </Tabs>
     </>
