@@ -25,11 +25,11 @@ function App() {
         <Tabs.Panel value="dashboard" p="md">
           <Stack gap="xl">
             <SummaryCards refreshKey={refreshKey} />
-            <Grid aria-colcount={2}>
-              <GridCol span={6}>
+            <Grid>
+              <GridCol span={{ base: 12, sm: 6 }}>
                 <ExpensePieChart refreshKey={refreshKey} />
               </GridCol>
-              <GridCol span={6}>
+              <GridCol span={{ base: 12, sm: 6 }}>
                 <MonthlyBarChart refreshKey={refreshKey} />
               </GridCol>
             </Grid>

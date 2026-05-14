@@ -16,7 +16,7 @@ export default function SummaryCards({ refreshKey }) {
   if (!data) return null;
 
   return (
-    <SimpleGrid cols={3}>
+    <SimpleGrid cols={{ base: 1, sm: 3 }}>
       {CARDS.map(({ key, label, color, dynamicColor }) => {
         const value = data[key];
         const resolvedColor = dynamicColor
@@ -24,7 +24,7 @@ export default function SummaryCards({ refreshKey }) {
           : color;
 
         return (
-          <Card key={key} withBorder radius="md" p="lg">
+          <Card key={key} withBorder radius="md" p="lg" ta="center">
             <Text size="sm" c="dimmed" mb={4}>{label}</Text>
             <Text size="xl" fw={700} c={resolvedColor}>{formatEuro(value)}</Text>
           </Card>
