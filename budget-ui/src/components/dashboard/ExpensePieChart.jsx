@@ -8,7 +8,7 @@ const COLORS = ['#1971c2', '#e03131', '#2f9e44', '#f08c00', '#7048e8', '#099268'
 const RADIAN = Math.PI / 180;
 
 function renderCustomizedLabel({ cx, cy, midAngle, outerRadius, percent, category }) {
-  const radius = outerRadius + 32;
+  const radius = outerRadius * 1.3;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
   return (
@@ -44,7 +44,8 @@ export default function ExpensePieChart({ refreshKey }) {
           data={items}
           dataKey="amount"
           nameKey="category"
-          outerRadius={120}
+          cy="44%"
+          outerRadius="60%"
           label={renderCustomizedLabel}
           labelLine
         >
