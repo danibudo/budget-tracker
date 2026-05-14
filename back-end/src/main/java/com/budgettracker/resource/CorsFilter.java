@@ -10,6 +10,9 @@ import jakarta.ws.rs.ext.Provider;
 @Provider
 public class CorsFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
+    private static final String ALLOWED_ORIGIN =
+            System.getenv().getOrDefault("ALLOWED_ORIGIN", "http://localhost:5173");
+
     @Override
     public void filter(ContainerRequestContext requestContext) {
         if ("OPTIONS".equalsIgnoreCase(requestContext.getMethod())) {
@@ -19,7 +22,7 @@ public class CorsFilter implements ContainerRequestFilter, ContainerResponseFilt
 
     @Override
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
-        responseContext.getHeaders().add("Access-Control-Allow-Origin", "http://localhost:5173");
+        responseContext.getHeaders().add("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
         responseContext.getHeaders().add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         responseContext.getHeaders().add("Access-Control-Allow-Headers", "Content-Type");
     }
