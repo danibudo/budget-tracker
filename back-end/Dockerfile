@@ -23,10 +23,14 @@ RUN mv /tmp/mysql-connector.jar $JBOSS_HOME/modules/com/mysql/main/mysql-connect
 
 # Register the driver and datasource via embedded CLI
 COPY docker/configure.cli /tmp/configure.cli
-RUN $JBOSS_HOME/bin/jboss-cli.sh --file=/tmp/configure.cli && rm /tmp/configure.cli
+RUN $JBOSS_HOME/bin/jboss-cli.sh --file=/tmp/configure.cli && \
+    rm /tmp/configure.cli && \
+    rm -rf $JBOSS_HOME/standalone/configuration/standalone_xml_history/current
 
 # Deploy application
 COPY --from=builder /build/target/budget-tracker-api.war $JBOSS_HOME/standalone/deployments/
+
+RUN chown -R jboss:jboss $JBOSS_HOME
 
 USER jboss
 EXPOSE 8080
@@ -34,6 +38,6 @@ EXPOSE 8080
 # Append memory limits to WildFly's default JAVA_OPTS without overwriting the
 # --add-opens flags that WildFly 33 needs on Java 17. Last -Xmx/-Xms wins,
 # so these override the defaults while keeping everything else intact.
-ENV JAVA_OPTS_APPEND="-Xms48m -Xmx180m -XX:MetaspaceSize=48m -XX:MaxMetaspaceSize=120m"
+ENV JAVA_OPTS_APPEND="-Xms48m -Xmx180m -XX:MetaspaceSize=48m -XX:MaxMetaspaceSize=96m -XX:ReservedCodeCacheSize=32m"
 
-CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0", "-bmanagement", "127.0.0.1"]
+CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0", "-bmanagement", "127.0.0.1", "-c", "standalone-microprofile.xml"]

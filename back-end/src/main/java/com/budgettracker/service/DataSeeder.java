@@ -3,9 +3,10 @@ package com.budgettracker.service;
 import com.budgettracker.model.Category;
 import com.budgettracker.model.CategoryType;
 import com.budgettracker.model.Transaction;
-import jakarta.ejb.Stateless;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-@Stateless
+@ApplicationScoped
 public class DataSeeder {
 
     private static final Logger log = Logger.getLogger(DataSeeder.class.getName());
@@ -23,6 +24,7 @@ public class DataSeeder {
 
     private record TxData(int daysAgo, String category, String description, double amount) {}
 
+    @Transactional
     public void resetData() {
         log.info("Wiping and re-seeding mock data...");
 
