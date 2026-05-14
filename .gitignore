@@ -1,0 +1,19 @@
+.DS_Store
+back-end/target/
+
+
+## Back-end
+# Default ignored files
+back-end/shelf/
+back-end/.idea
+# Editor-based HTTP Client requests
+back-end/httpRequests/
+# Ignored default folder with query files
+back-end/queries/
+# Datasource local storage ignored files
+back-end/dataSources/
+back-end/dataSources.local.xml
+
+## Front-end
+budget-ui/node_modules/
+budget-ui/dist/
