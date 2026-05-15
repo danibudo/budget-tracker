@@ -154,8 +154,8 @@ Because EC2 instances use dynamic IPs, the Aiven service's allowed IP list must 
 The API runs in a Docker container on a **t2.micro** EC2 instance (1 vCPU, 1 GB RAM) with an Elastic IP for a stable public address. The Docker image is hosted on DockerHub and must be built for `linux/amd64`:
 
 ```bash
-docker build --platform linux/amd64 -t <dockerhub-username>/budget-tracker-api ./back-end
-docker push <dockerhub-username>/budget-tracker-api
+docker build --platform linux/amd64 -t danibud0/budget-tracker-api ./back-end
+docker push danibud0/budget-tracker-api
 ```
 
 On the instance, pull the image and run the container with the Aiven credentials and a restart policy so it comes back up automatically after the nightly stop:
@@ -173,14 +173,14 @@ docker run -d \
   <dockerhub-username>/budget-tracker-api
 ```
 
-The instance runs from **5:30 AM to 1:30 AM** (20 hours/day) to minimise the Elastic IP idle cost. Two **EventBridge Scheduler** rules handle the start/stop automatically, targeting an IAM role with `ec2:StartInstances` and `ec2:StopInstances` permissions:
+The instance runs from **5:30 AM to 1:30 AM** (20 hours/day) to minimise AWS costs, balancing between the EC2 cost and the Elastic IP idle cost. Two **EventBridge Scheduler** rules handle the start/stop automatically, targeting an IAM role with `ec2:StartInstances` and `ec2:StopInstances` permissions:
 
 | Schedule | Cron | Action |
 |---|---|---|
 | `budget-tracker-api-start` | `30 5 * * ? *` | `StartInstances` |
 | `budget-tracker-api-stop` | `30 1 * * ? *` | `StopInstances` |
 
-The API is accessible at `http://<elastic-ip>:8080/api/`.
+The API is accessible at `http://52.29.167.137:8080/api/`.
 
 ### UI — Netlify
 
@@ -189,7 +189,7 @@ The frontend is deployed on [Netlify](https://netlify.com). The `netlify.toml` r
 ```toml
 [[redirects]]
   from = "/api/*"
-  to   = "http://<elastic-ip>:8080/api/:splat"
+  to   = "http://52.29.167.137:8080/api/:splat"
   status = 200
   force  = true
 ```
