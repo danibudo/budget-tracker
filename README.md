@@ -141,37 +141,55 @@ These are required by the API at runtime:
 
 ## Deployment
 
-Stack: WildFly API on **Fly.io** · MySQL database on **Aiven** · React frontend on **Netlify**
+Stack: WildFly API on **AWS EC2** · MySQL database on **Aiven** · React frontend on **Netlify**
 
 ### Database — Aiven
 
-The MySQL database is hosted on [Aiven](https://aiven.io). Create a MySQL service (any region close to `ams`), then note the host, port, database name, user, and password from the service overview. Aiven requires SSL for all connections; the WildFly datasource is configured with `sslMode=REQUIRED`.
+The MySQL database is hosted on [Aiven](https://aiven.io). Create a MySQL service, then note the host, port, database name, user, and password from the service overview. Aiven requires SSL for all connections; the WildFly datasource is configured with `sslMode=REQUIRED`.
 
-Because Fly.io machines use dynamic IPs, the Aiven service's allowed IP list must include `0.0.0.0/0`.
+Because EC2 instances use dynamic IPs, the Aiven service's allowed IP list must include `0.0.0.0/0`.
 
-### API — Fly.io
+### API — AWS EC2
 
-The API is deployed on [Fly.io](https://fly.io) from the `back-end/` directory. The `fly.toml` targets the `ams` region on a `shared-cpu-1x` / 1 GB machine. The `jboss-web.xml` overrides the WildFly context root to `/` in the production image, so the base path on Fly.io is simply `/api/`.
-
-```bash
-cd back-end
-fly deploy
-```
-
-The five `DB_*` environment variables must be set as Fly secrets (using the Aiven connection details) before the first deploy:
+The API runs in a Docker container on a **t2.micro** EC2 instance (1 vCPU, 1 GB RAM) with an Elastic IP for a stable public address. The Docker image is hosted on DockerHub and must be built for `linux/amd64`:
 
 ```bash
-fly secrets set DB_HOST=<aiven-host> DB_PORT=<aiven-port> DB_NAME=<db-name> DB_USER=<user> DB_PASSWORD=<password>
+docker build --platform linux/amd64 -t <dockerhub-username>/budget-tracker-api ./back-end
+docker push <dockerhub-username>/budget-tracker-api
 ```
+
+On the instance, pull the image and run the container with the Aiven credentials and a restart policy so it comes back up automatically after the nightly stop:
+
+```bash
+docker run -d \
+  --name budget-tracker-api \
+  --restart unless-stopped \
+  -p 8080:8080 \
+  -e DB_HOST=<aiven-host> \
+  -e DB_PORT=<aiven-port> \
+  -e DB_NAME=<db-name> \
+  -e DB_USER=<db-user> \
+  -e DB_PASSWORD=<db-password> \
+  <dockerhub-username>/budget-tracker-api
+```
+
+The instance runs from **5:30 AM to 1:30 AM** (20 hours/day) to minimise the Elastic IP idle cost. Two **EventBridge Scheduler** rules handle the start/stop automatically, targeting an IAM role with `ec2:StartInstances` and `ec2:StopInstances` permissions:
+
+| Schedule | Cron | Action |
+|---|---|---|
+| `budget-tracker-api-start` | `30 5 * * ? *` | `StartInstances` |
+| `budget-tracker-api-stop` | `30 1 * * ? *` | `StopInstances` |
+
+The API is accessible at `http://<elastic-ip>:8080/api/`.
 
 ### UI — Netlify
 
-The frontend is deployed on [Netlify](https://netlify.com). The `netlify.toml` runs `npm run build` and publishes the `dist/` directory. A redirect rule proxies all `/api/*` requests to the Fly.io backend, so the built frontend never needs the backend URL baked in:
+The frontend is deployed on [Netlify](https://netlify.com). The `netlify.toml` runs `npm run build` and publishes the `dist/` directory. A redirect rule proxies all `/api/*` requests to the EC2 instance, so the built frontend never needs the backend URL baked in:
 
 ```toml
 [[redirects]]
   from = "/api/*"
-  to   = "https://budget-tracker-api.fly.dev/api/:splat"
+  to   = "http://<elastic-ip>:8080/api/:splat"
   status = 200
   force  = true
 ```
