@@ -141,36 +141,73 @@ These are required by the API at runtime:
 
 ## Deployment
 
-Stack: WildFly API on **AWS EC2** · MySQL database on **Aiven** · React frontend on **Netlify**
+Stack: WildFly API on **AWS EC2** · MySQL database on **AWS RDS** · React frontend on **Netlify**
 
-### Database — Aiven
+### Database — AWS RDS
 
-The MySQL database is hosted on [Aiven](https://aiven.io). Create a MySQL service, then note the host, port, database name, user, and password from the service overview. Aiven requires SSL for all connections; the WildFly datasource is configured with `sslMode=REQUIRED`.
+The MySQL database is hosted on **AWS RDS** (free tier, `db.t3.micro`). Create a MySQL 8.0 instance using the full configuration template and select the free tier. During setup, connect it to the same VPC as the EC2 instance — AWS will automatically configure the security groups to allow traffic on port 3306 between the two.
 
-Because EC2 instances use dynamic IPs, the Aiven service's allowed IP list must include `0.0.0.0/0`.
+Once the instance is running, connect to it from the EC2 instance and create the application database:
+
+```bash
+mysql -h <rds-endpoint> -u admin -p
+```
+
+```sql
+CREATE DATABASE budget_tracker;
+EXIT;
+```
 
 ### API — AWS EC2
 
 The API runs in a Docker container on a **t2.micro** EC2 instance (1 vCPU, 1 GB RAM) with an Elastic IP for a stable public address. The Docker image is hosted on DockerHub and must be built for `linux/amd64`:
 
 ```bash
-docker build --platform linux/amd64 -t danibud0/budget-tracker-api ./back-end
-docker push danibud0/budget-tracker-api
+docker build --platform linux/amd64 -t <dockerhub-username>/budget-tracker-api ./back-end
+docker push <dockerhub-username>/budget-tracker-api
 ```
 
-On the instance, pull the image and run the container with the Aiven credentials and a restart policy so it comes back up automatically after the nightly stop:
+On the instance, pull the image and run the container with the RDS credentials:
 
 ```bash
 docker run -d \
   --name budget-tracker-api \
-  --restart unless-stopped \
+  --restart always \
   -p 8080:8080 \
-  -e DB_HOST=<aiven-host> \
-  -e DB_PORT=<aiven-port> \
-  -e DB_NAME=<db-name> \
-  -e DB_USER=<db-user> \
+  -e DB_HOST=<rds-endpoint> \
+  -e DB_PORT=3306 \
+  -e DB_NAME=budget_tracker \
+  -e DB_USER=admin \
   -e DB_PASSWORD=<db-password> \
   <dockerhub-username>/budget-tracker-api
+```
+
+To ensure the container starts after the EC2 instance comes back up from its nightly stop (and only once the network is fully ready), a systemd service manages it instead of relying on Docker's restart policy alone. Create `/etc/systemd/system/budget-tracker-api.service`:
+
+```ini
+[Unit]
+Description=Budget Tracker API
+After=docker.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+ExecStartPre=/bin/bash -c 'until getent hosts <rds-endpoint>; do echo "Waiting for DNS..."; sleep 3; done'
+ExecStart=/usr/bin/docker start -a budget-tracker-api
+ExecStop=/usr/bin/docker stop budget-tracker-api
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Then enable it:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable budget-tracker-api
+sudo systemctl start budget-tracker-api
 ```
 
 The instance runs from **5:30 AM to 1:30 AM** (20 hours/day) to minimise AWS costs, balancing between the EC2 cost and the Elastic IP idle cost. Two **EventBridge Scheduler** rules handle the start/stop automatically, targeting an IAM role with `ec2:StartInstances` and `ec2:StopInstances` permissions:
